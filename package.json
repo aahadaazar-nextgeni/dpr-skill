@@ -1,6 +1,6 @@
 {
   "name": "dpr-skill",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Cross-platform Daily Progress Report skill for Claude Code",
   "license": "MIT",
   "repository": {

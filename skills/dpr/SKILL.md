@@ -45,7 +45,17 @@ Keep this modifier model extensible for future output modes. A modifier changes 
 
 5. Treat Git commits as authoritative for completed work. Use Claude session text only to describe work that is still in progress, decisions, blockers, or open questions. Use pull-request data as delivery context and remove duplication between sources.
 
-6. If the helper reports no qualifying activity, ask whether the user still wants a report. Do not create a file until they confirm.
+6. If the helper reports no qualifying activity, do not create a report automatically.
+
+   - When the requested date is today, tell the user that no qualifying work was detected today. Offer these choices:
+     1. Generate yesterday's report with `/dpr timetravel yesterday`.
+     2. Generate the last committed workday with `/dpr timetravel <lastWorkedDate>`, using the helper's `lastWorkedDate` when available.
+     3. Choose another date with `/dpr timetravel <date>`.
+   - If no `lastWorkedDate` is available, omit that choice.
+   - If `lastWorkedDate` is yesterday, combine those two choices instead of presenting duplicate dates.
+   - For a `timetravel` date with no activity, tell the user that no qualifying activity was found for that date and ask whether they want to generate an empty report.
+
+   Wait for the user's choice before continuing.
 
 7. Synthesize related activity into coherent client-facing tasks. Use one of these statuses for each task: `DONE`, `IN PROGRESS`, or `BLOCKED`.
 

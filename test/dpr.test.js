@@ -129,6 +129,14 @@ test('collects a temporary Git repository using the configured sources', () => {
   assert.equal(result.github.pullRequests.length, 0);
   assert.equal(result.sessions.sessions.length, 0);
   assert.equal(result.workingTree, null);
+  assert.equal(result.lastWorkedDate, null);
+  const noActivity = helper.collect({
+    date: '2026-08-13',
+    repoRoot: repo,
+    env: { CLAUDE_CONFIG_DIR: path.join(repo, '.claude-state') },
+  });
+  assert.equal(noActivity.hasActivity, false);
+  assert.equal(noActivity.lastWorkedDate, '2026-08-12');
   fs.rmSync(repo, { recursive: true, force: true });
 });
 

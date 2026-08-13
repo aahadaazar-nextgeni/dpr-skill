@@ -67,6 +67,16 @@ For a shorter report, use the `shorten` modifier with any date mode:
 
 Short mode uses a compact default format with concise task descriptions and summary. Repository configuration can customize its sections and limits.
 
+### When there is no work today
+
+If `/dpr` finds no qualifying activity for today, it does not create an empty report automatically. It tells you that no qualifying work was detected and offers:
+
+- yesterday: `/dpr timetravel yesterday`
+- the last day with one of your commits: `/dpr timetravel YYYY-MM-DD`
+- another date of your choice with `timetravel`
+
+For a `timetravel` date with no activity, Claude asks whether you still want an empty report.
+
 Reports are saved under Claude's daily-report directory:
 
 ```text

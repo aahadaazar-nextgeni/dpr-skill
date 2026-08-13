@@ -243,6 +243,19 @@ function collectCommits(repo, date, currentAuthor) {
   });
 }
 
+function lastWorkedDate(repo, beforeDate, currentAuthor) {
+  if (!currentAuthor.selector) return null;
+  const result = tryRun('git', [
+    '-C', repo, 'log', '--all',
+    `--before=${beforeDate} 00:00:00`,
+    `--author=${currentAuthor.selector}`,
+    '--format=%ad', '--date=format:%Y-%m-%d', '-n', '1',
+  ]);
+  if (!result.ok || !result.value) return null;
+  const candidate = result.value.split(/\r?\n/).find(Boolean);
+  return candidate && /^\d{4}-\d{2}-\d{2}$/.test(candidate) ? candidate : null;
+}
+
 function workingTree(repo, include) {
   if (!include) return null;
   const status = tryRun('git', ['-C', repo, 'status', '--porcelain=v1', '-uall']);
@@ -360,6 +373,9 @@ function collect(options = {}) {
   const today = date === localDate();
   const currentAuthor = reportConfig.sources.commits ? author(repo) : { email: '', name: '', selector: '' };
   const commits = reportConfig.sources.commits ? collectCommits(repo, date, currentAuthor) : [];
+  const previousCommitDate = reportConfig.sources.commits
+    ? lastWorkedDate(repo, date, currentAuthor)
+    : null;
   const sessions = reportConfig.sources.claudeSessions
     ? collectSessions(repo, date, options.env || process.env)
     : { directory: null, sessions: [] };
@@ -380,6 +396,7 @@ function collect(options = {}) {
     repositoryName: path.basename(repo),
     reportPath: reportPath(repo, date, options.env || process.env),
     reportConfig,
+    lastWorkedDate: previousCommitDate,
     author: currentAuthor,
     commits,
     github,
