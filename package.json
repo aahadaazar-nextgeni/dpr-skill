@@ -1,0 +1,25 @@
+{
+  "name": "dpr-skill",
+  "version": "0.1.0",
+  "description": "Cross-platform Daily Progress Report skill for Claude Code",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aahadaazar-nextgeni/dpr-skill.git"
+  },
+  "bin": {
+    "dpr-skill": "bin/dpr-install.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin/",
+    "skills/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test"
+  }
+}
