@@ -123,6 +123,13 @@ test('collects a temporary Git repository using the configured sources', () => {
       otherRepositories: false,
     },
   }));
+  const configOutput = execFileSync(process.execPath, [
+    path.resolve(__dirname, '../skills/dpr/scripts/dpr.js'),
+    'config', '--repo-root', repo, '--short',
+  ], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+  const configured = JSON.parse(configOutput);
+  assert.equal(configured.reportConfig.mode, 'short');
+  assert.deepEqual(configured.reportConfig.sections, ['tasks', 'summary']);
   const result = helper.collect({ date: '2026-08-12', repoRoot: repo, env: { CLAUDE_CONFIG_DIR: path.join(repo, '.claude-state') } });
   assert.equal(result.hasActivity, true);
   assert.equal(result.commits.length, 1);

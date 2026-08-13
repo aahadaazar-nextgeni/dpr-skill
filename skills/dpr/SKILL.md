@@ -7,7 +7,7 @@ description: Generate a client-facing Daily Progress Report for the current Git 
 
 Generate one client-facing report for the current Git repository. Report what was accomplished, the current status, notable decisions, blockers, and relevant commits. Do not expose collection steps, raw diffs, file paths, or internal debugging details.
 
-## Invocation modifiers
+## Commands and modifiers
 
 Treat `timetravel` as the date modifier and `shorten`, `short`, `--shorten`, or `--short` as the output modifier. Modifiers can appear in any order:
 
@@ -17,6 +17,32 @@ Treat `timetravel` as the date modifier and `shorten`, `short`, `--shorten`, or 
 - `/dpr timetravel 2026-08-05 --short` — short report for a specific date.
 
 Keep this modifier model extensible for future output modes. A modifier changes the current invocation only; repository configuration provides defaults.
+
+### Configuration commands
+
+Treat these as setup commands, not report requests. Do not collect activity or create a report when one is used:
+
+- `/dpr create-template` — create a repository-local `.dprrc.json` and `.dpr-template.md`.
+- `/dpr configure` — create or update only `.dprrc.json`.
+- `/dpr show-config` — display the effective configuration without changing files.
+
+For `create-template` or `configure`:
+
+1. Confirm that the current directory is a Git repository.
+2. Check whether `.dprrc.json` or `.dpr-template.md` already exists. If replacing an existing file would be necessary, show what exists and ask for confirmation first.
+3. Accept the user's natural-language preferences when provided. Otherwise ask only for the missing choices: sections and order, evidence sources, length limits, and desired headings or layout.
+4. Write repository-local files using the supported configuration keys and template placeholders. Never add executable configuration or arbitrary prompt instructions.
+5. Validate the result with:
+
+   `node <skill-directory>/scripts/dpr.js config --repo-root <repository-root>`
+
+6. Report which files were created or updated and summarize the resulting behavior. Do not generate a DPR as part of setup.
+
+For `create-template`, create a `.dpr-template.md` containing only these placeholders as needed: `{{date}}`, `{{repository}}`, `{{tasks}}`, `{{summary}}`, `{{notes}}`, and `{{commits}}`. Set `"template": ".dpr-template.md"` in `.dprrc.json`.
+
+For `configure`, preserve an existing `template` setting unless the user explicitly asks to change it. If the user asks to customize only the format, update the template file and leave unrelated source and limit settings unchanged.
+
+For `show-config`, run the helper's `config` command and explain the active mode, sections, sources, limits, and custom template in plain language. Do not expose internal collection details unless the user asks.
 
 ## Workflow
 

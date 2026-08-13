@@ -1,30 +1,28 @@
-# DPR Skill for Claude Code
+# DPR for Claude Code
 
-Generate a client-facing Daily Progress Report from the current Git repository. The skill combines authored commits, optional GitHub pull requests, Claude Code session work, and today's working-tree changes.
+DPR creates a clear, client-friendly update from the work in your current Git repository. It can summarize completed work, work in progress, decisions, blockers, pull requests, and relevant Claude Code sessions.
 
-Claude Code is supported on macOS, Linux, Windows, and WSL. The helper uses Node.js APIs for path, date, filesystem, and transcript handling so the workflow does not depend on GNU-only shell commands.
+It is designed for project repositories, so each project can have its own DPR settings.
 
-## Install from GitHub
+## Add DPR to a project
 
-Give your team access to the GitHub repository, then run this from the root of the project where the skill should be available:
+Run this from the root of the project where you want to use DPR:
 
 ```sh
 npx --yes --package=github:aahadaazar-nextgeni/dpr-skill dpr-skill install
 ```
 
-The skill is installed only in the current repository at `./.claude/skills/dpr`. Run the command separately in each repository where DPR support is wanted. The installer refuses to run outside a Git repository.
+Then start Claude Code in that project and run:
 
-For a private repository, users must have GitHub access and working Git credentials. SSH-based access can be used instead:
-
-```sh
-npx --yes --package=git+ssh://git@github.com/aahadaazar-nextgeni/dpr-skill.git dpr-skill install
+```text
+/dpr
 ```
 
-This uses npm only as the package runner; the skill does not need to be published to npm or require an npm subscription.
+The skill is added only to that project at `.claude/skills/dpr`. There is no npm subscription or npm account required.
 
-## Install manually
+### Share or install manually
 
-If you share the skill files directly, copy the entire `skills/dpr` directory—not only `SKILL.md`—into the project where Claude Code should use it:
+You can also copy the `skills/dpr` folder from this repository into a project:
 
 ```text
 your-project/
@@ -36,118 +34,137 @@ your-project/
                 └── dpr.js
 ```
 
-Then start Claude Code from that project and run `/dpr`.
+Copy the whole folder, not only `SKILL.md`, because the skill uses the bundled helper script.
 
-Use `--dry-run` to preview the destination. Existing installations are preserved unless `--force` is supplied.
+## Everyday commands
 
-## Use
-
-Start Claude Code in a Git repository and use:
+### Create today's report
 
 ```text
 /dpr
 ```
 
-For a previous date:
+Use this at the end of a workday. DPR looks at the current repository and writes the report to Claude's daily-report folder.
 
-```text
-/dpr timetravel yesterday
-/dpr timetravel 2026-08-05
-```
-
-If `timetravel` is used without a date, Claude will ask which date to report.
-
-For a shorter report, use the `shorten` modifier with any date mode:
+### Create a shorter report
 
 ```text
 /dpr shorten
+```
+
+This creates a compact update with concise tasks and summary. It also works with a date:
+
+```text
 /dpr timetravel yesterday shorten
 /dpr timetravel 2026-08-05 --short
 ```
 
-Short mode uses a compact default format with concise task descriptions and summary. Repository configuration can customize its sections and limits.
-
-### When there is no work today
-
-If `/dpr` finds no qualifying activity for today, it does not create an empty report automatically. It tells you that no qualifying work was detected and offers:
-
-- yesterday: `/dpr timetravel yesterday`
-- the last day with one of your commits: `/dpr timetravel YYYY-MM-DD`
-- another date of your choice with `timetravel`
-
-For a `timetravel` date with no activity, Claude asks whether you still want an empty report.
-
-Reports are saved under Claude's daily-report directory:
+### Create a report for another day
 
 ```text
-~/.claude/daily-reports/<repository-name>/YYYY-MM-DD.md
+/dpr timetravel yesterday
+/dpr timetravel last Friday
+/dpr timetravel 2026-08-05
 ```
 
-## Requirements
+If a date is not included after `timetravel`, Claude asks which date to use.
 
-- Claude Code
-- Git
-- Node.js 18 or newer
-- GitHub CLI (`gh`) is optional; authenticated `gh` enables pull-request context
+### When there was no work today
 
-The report still works when GitHub CLI is unavailable or unauthenticated. Claude session transcripts are optional; missing or unreadable transcripts are skipped.
+If `/dpr` finds no qualifying activity today, it does not create an empty report automatically. It tells you that no work was detected and offers:
 
-## Design notes
+- yesterday's report;
+- the last day with one of your commits;
+- another date using `timetravel`.
 
-The installed skill contains one instruction file and one Node.js helper. The helper invokes Git and GitHub CLI without a shell, uses platform-aware paths, and reads only the current repository's Claude transcripts. It checks other Claude project directories only by file metadata to note that another repository had activity; it does not read those transcripts.
+For example, it may suggest:
 
-The report uses the local calendar date of the machine running Claude Code. Time-zone and daylight-saving conversion is intentionally outside this first version's scope.
-
-## Repository configuration
-
-Create `.dprrc.json` in the root of a project to customize the DPR without changing the installed skill. The file is repository-local and can be committed so the team shares the same report format.
-
-Example:
-
-```json
-{
-  "version": 1,
-  "sections": [
-    "tasks",
-    "summary",
-    "notes"
-  ],
-  "sources": {
-    "commits": true,
-    "pullRequests": true,
-    "claudeSessions": true,
-    "workingTree": true,
-    "otherRepositories": false
-  },
-  "limits": {
-    "summarySentences": 2,
-    "taskDescriptionSentences": 1,
-    "maxNotes": 3,
-    "maxCommits": 5
-  }
-}
+```text
+/dpr timetravel yesterday
+/dpr timetravel 2026-08-12
+/dpr timetravel <another-date>
 ```
 
-Available sections are `tasks`, `summary`, `notes`, and `commits`. The array controls both which sections appear and their order. For example, use `"sections": ["summary", "tasks"]` to omit notes and commits.
+## Make DPR match your team
 
-Available sources are `commits`, `pullRequests`, `claudeSessions`, `workingTree`, and `otherRepositories`. Disabled sources are not collected and must not be used when writing the report.
+You can create or change the project’s DPR setup directly from Claude. These commands change project files; they do not generate a report.
 
-Limits are optional. `summarySentences` and `taskDescriptionSentences` must be positive integers. `maxNotes` and `maxCommits` must be non-negative integers; use `null` for no limit.
+### Create your own template
 
-Short mode supplies compact defaults only where the repository has not configured a value. Explicit repository sections and limits are respected.
-
-### Custom template
-
-For complete control over the layout, point `template` to a Markdown file inside the repository:
-
-```json
-{
-  "version": 1,
-  "template": ".dpr-template.md"
-}
+```text
+/dpr create-template
 ```
 
-Supported placeholders are:
+Claude asks what you want, then creates:
+
+```text
+.dprrc.json
+.dpr-template.md
+```
+
+Example conversation:
+
+```text
+You: /dpr create-template
+
+Claude: Which sections should the report include?
+You: Tasks, summary, and blockers. Leave out commits.
+
+Claude: Should the report be standard or concise?
+You: Concise, with the heading "Client update".
+```
+
+You can also describe the result in one request:
+
+```text
+/dpr create-template with only tasks and summary, no commits, and a concise client update heading
+```
+
+If a template already exists, Claude shows what would be changed and asks before replacing it.
+
+### Change the configuration without changing the template
+
+```text
+/dpr configure
+```
+
+Useful examples:
+
+```text
+/dpr configure and omit the commits section
+/dpr configure to include only summary and tasks
+/dpr configure to show at most three notes and five commits
+/dpr configure to stop checking activity in other repositories
+```
+
+### See the current setup
+
+```text
+/dpr show-config
+```
+
+Claude explains which sections, sources, limits, and template are currently active.
+
+### Share a setup with your team
+
+Because configuration is project-local, commit these files with the project if everyone should use the same format:
+
+```text
+.dprrc.json
+.dpr-template.md
+```
+
+## What can be customized?
+
+You can control:
+
+- report sections: tasks, summary, notes, and commits;
+- the order of those sections;
+- whether commits, pull requests, Claude sessions, working-tree changes, or other-repository activity are considered;
+- how many sentences, notes, or commits appear;
+- the complete report layout and headings.
+
+Custom templates can use these placeholders:
 
 ```text
 {{date}}
@@ -158,16 +175,33 @@ Supported placeholders are:
 {{commits}}
 ```
 
-The template controls the complete output layout. The DPR skill does not add sections that the template does not request. Template paths must stay inside the repository.
+The template stays inside the project repository and is validated before DPR uses it.
 
-The invocation modifier selects the standard or short built-in defaults. Values in `.dprrc.json` override those defaults. Invalid configuration is reported instead of being silently ignored.
+## Where reports are saved
 
-## Development
+Reports are saved by Claude Code under:
 
-Run the tests from this repository:
+```text
+~/.claude/daily-reports/<repository-name>/YYYY-MM-DD.md
+```
+
+An existing report for the same project and date is replaced, not appended to.
+
+## What you need
+
+- Claude Code
+- Git
+- Node.js 18 or newer
+- GitHub CLI is optional; it adds pull-request context when authenticated
+
+DPR works on macOS, Linux, Windows, and WSL.
+
+## For maintainers
+
+Run the automated tests from this repository:
 
 ```sh
 npm test
 ```
 
-The package name is intentionally neutral. Distribution is handled through the GitHub repository rather than the npm registry.
+The package is distributed from GitHub rather than the npm registry.

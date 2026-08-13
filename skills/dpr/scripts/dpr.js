@@ -428,11 +428,18 @@ function main(argv = process.argv.slice(2)) {
   const [command, ...rest] = argv;
   if (!command || command === 'help' || command === '--help' || command === '-h'
     || rest.includes('--help') || rest.includes('-h')) {
-    process.stdout.write('Usage: dpr.js collect [--date YYYY-MM-DD] [--repo-root PATH] [--short]\n');
+    process.stdout.write('Usage: dpr.js collect [--date YYYY-MM-DD] [--repo-root PATH] [--short]\n'
+      + '       dpr.js config [--repo-root PATH] [--short]\n');
     return;
   }
-  if (command !== 'collect') throw new Error(`Unknown command: ${command}`);
-  process.stdout.write(`${JSON.stringify(collect(parseArgs(rest)), null, 2)}\n`);
+  if (command !== 'collect' && command !== 'config') throw new Error(`Unknown command: ${command}`);
+  const options = parseArgs(rest);
+  if (command === 'config') {
+    const repo = repoRoot(options.repoRoot || process.cwd());
+    process.stdout.write(`${JSON.stringify({ repo, reportConfig: loadConfig(repo, options) }, null, 2)}\n`);
+    return;
+  }
+  process.stdout.write(`${JSON.stringify(collect(options), null, 2)}\n`);
 }
 
 if (require.main === module) {
