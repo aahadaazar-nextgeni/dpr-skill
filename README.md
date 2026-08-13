@@ -36,6 +36,20 @@ your-project/
 
 Copy the whole folder, not only `SKILL.md`, because the skill uses the bundled helper script.
 
+## Update DPR
+
+If DPR is already installed in a project, run the same GitHub installer with `--force` from that project’s root:
+
+```sh
+npx --yes --package=github:aahadaazar-nextgeni/dpr-skill#main dpr-skill install --force
+```
+
+The updated skill replaces the old files in `.claude/skills/dpr`. Restart Claude Code afterward so it loads the new version.
+
+Your project’s `.dprrc.json`, `.dpr-template.md`, daily reports, and other project files are not changed.
+
+If DPR was installed manually, copy the latest `skills/dpr` folder over the existing `.claude/skills/dpr` folder, then restart Claude Code.
+
 ## Everyday commands
 
 ### Create today's report
